@@ -3,7 +3,7 @@ import random
 import click
 import time
 import pathlib
-
+from typing import Tuple
 
 import joblib
 from sklearn.neural_network import MLPClassifier
@@ -170,29 +170,17 @@ class NNDataBot(Bot):
                 )
 
 
-def train_NN_model(
-    replay_memory_location: Optional[pathlib.Path],
-    model_location: Optional[pathlib.Path],
-    model_class: Literal["NN", "LR"] = "LR",
-) -> None:
+def train_NN_model(replay_memory_location: pathlib.Path, model_location: pathlib.Path, hidden_layer_sizes: Tuple) -> None:
     """
-    Train the ML model for the MLPlayingBot based on replay memory stored byt the MLDataBot.
+    Train the NN model for the MLPlayingBot based on replay memory stored byt the MLDataBot.
     This implementation has the option to train a neural network model or a model based on logistic regression.
     The model classes used in this implemntation are not necesarily optimal.
 
     :param replay_memory_location: Location of the games stored by MLDataBot, default pathlib.Path('ML_replay_memories') / 'test_replay_memory'
     :param model_location: Location where the model will be stored, default pathlib.Path("ML_models") / 'test_model'
-    :param model_class: The machine learning model class to be used, either 'NN' for a neural network, or 'LR' for a logistic regression.
     :param overwrite: Whether to overwrite a possibly existing model.
     """
-    if replay_memory_location is None:
-        replay_memory_location = (
-            pathlib.Path("ML_replay_memories") / "test_replay_memory"
-        )
-    if model_location is None:
-        model_location = pathlib.Path("ML_models") / "test_model"
-    assert model_class == "NN" or model_class == "LR", "Unknown model class"
-
+    
     # check that the replay memory dataset is found at the specified location
     if not replay_memory_location.exists():
         raise ValueError(f"Dataset was not found at: {replay_memory_location} !")
@@ -216,7 +204,6 @@ def train_NN_model(
             won_label = int(won_label_str)
             data.append(feature_list)
             targets.append(won_label)
-
     print("Dataset Statistics:")
     samples_of_wins = sum(targets)
     samples_of_losses = len(targets) - samples_of_wins
@@ -236,10 +223,8 @@ def train_NN_model(
     # needs a bigger dataset, but if you find the correct combination of neurons and neural layers and provide a big enough training dataset can lead to better performance
 
     # one layer of 30 neurons
-    hidden_layer_sizes = 30
     # two layers of 30 and 5 neurons respectively
     # hidden_layer_sizes = (30, 5)
-
     # The learning rate determines how fast we move towards the optimal solution.
     # A low learning rate will converge slowly, but a large one might overshoot.
     learning_rate = 0.0001
@@ -257,6 +242,14 @@ def train_NN_model(
         n_iter_no_change=6,
         activation="tanh",
     )
+    start = time.time()
+    print("Starting training phase...")
+
+    model = learner.fit(data, targets)
+    # Save the model in a file
+    joblib.dump(model, model_location)
+    end = time.time()
+    print("The model was trained in ", (end - start) / 60, "minutes.")
 
 
 def create_state_and_actions_vector_representation(
@@ -490,7 +483,7 @@ def create_replay_memory_dataset(bot1: Bot, bot2: Bot) -> None:
     # define replay memory database creation parameters
     num_of_games: int = 1000
     replay_memory_dir: str = "NN_replay_memories"
-    replay_memory_filename: str = "random_random_1k_games.txt"
+    replay_memory_filename: str = "rdeep_rdeep_1k_games.txt"
     replay_memory_location = pathlib.Path(replay_memory_dir) / replay_memory_filename
 
     delete_existing_older_dataset = False
@@ -525,17 +518,13 @@ def create_replay_memory_dataset(bot1: Bot, bot2: Bot) -> None:
         f"Replay memory dataset recorder for {num_of_games} games.\nDataset is stored at: {replay_memory_location}"
     )
 
-def train_model(model_type: str) -> None:
-    """Train model for ML bot.
-    
-    Args:
-        model_type: either 'NN' for a neural network, or 'LR' for a logistic regression.
-
+def train_model(hidden_layer_sizes: Tuple) -> None:
+    """Train model for NN bot.
     """
     # directory where the replay memory is saved
-    replay_memory_filename: str = "random_random_10k_games.txt"
+    replay_memory_filename: str = "rdeep_rdeep_1k_games.txt"
     # filename of replay memory within that directory
-    replay_memories_directory: str = "ML_replay_memories"
+    replay_memories_directory: str = "NN_replay_memories"
     # Whether to train a complicated Neural Network model or a simple one.
     # Tips: a neural network usually requires bigger datasets to be trained on, and to play with the parameters of the model.
     # Feel free to play with the hyperparameters of the model in file 'ml_bot.py', function 'train_ML_model',
@@ -543,8 +532,8 @@ def train_model(model_type: str) -> None:
     replay_memory_location = (
         pathlib.Path(replay_memories_directory) / replay_memory_filename
     )
-    model_name: str = "simple_model"
-    model_dir: str = "ML_models"
+    model_name: str = "simple_model" + str(hidden_layer_sizes)
+    model_dir: str = "NN_models"
     model_location = pathlib.Path(model_dir) / model_name
     overwrite: bool = True
 
@@ -557,7 +546,7 @@ def train_model(model_type: str) -> None:
     train_NN_model(
         replay_memory_location=replay_memory_location,
         model_location=model_location,
-        model_class=model_type,
+        hidden_layer_sizes = hidden_layer_sizes
     )
 
 
