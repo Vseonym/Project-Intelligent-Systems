@@ -488,9 +488,9 @@ def create_replay_memory_dataset(bot1: Bot, bot2: Bot) -> None:
 
     """
     # define replay memory database creation parameters
-    num_of_games: int = 10000
-    replay_memory_dir: str = "ML_replay_memories"
-    replay_memory_filename: str = "random_random_10k_games.txt"
+    num_of_games: int = 1000
+    replay_memory_dir: str = "NN_replay_memories"
+    replay_memory_filename: str = "random_random_1k_games.txt"
     replay_memory_location = pathlib.Path(replay_memory_dir) / replay_memory_filename
 
     delete_existing_older_dataset = False
@@ -507,14 +507,14 @@ def create_replay_memory_dataset(bot1: Bot, bot2: Bot) -> None:
 
     # create new replay memory dataset, according to the behaviour of the provided bots and the provided random seed
     engine = SchnapsenGamePlayEngine()
-    replay_memory_recording_bot_1 = MLDataBot(
+    replay_memory_recording_bot_1 = NNDataBot(
         bot1, replay_memory_location=replay_memory_location
     )
-    replay_memory_recording_bot_2 = MLDataBot(
+    replay_memory_recording_bot_2 = NNDataBot(
         bot2, replay_memory_location=replay_memory_location
     )
     for i in range(1, num_of_games + 1):
-        if i % 500 == 0:
+        if i % 50 == 0:
             print(f"Progress: {i}/{num_of_games}")
         engine.play_game(
             replay_memory_recording_bot_1,
@@ -554,7 +554,7 @@ def train_model(model_type: str) -> None:
         )
         model_location.unlink()
 
-    train_ML_model(
+    train_NN_model(
         replay_memory_location=replay_memory_location,
         model_location=model_location,
         model_class=model_type,
