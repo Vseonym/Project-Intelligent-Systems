@@ -19,6 +19,10 @@ from schnapsen.game import (
     GamePlayEngine,
     SchnapsenGamePlayEngine,
     TrumpExchange,
+    SchnapsenHandGenerator,
+    BotState,
+    GameState,
+    Talon
 )
 from schnapsen.alternative_engines.ace_one_engine import AceOneGamePlayEngine
 from schnapsen.bots import RandBot, RdeepBot, MiniMaxBot, AlphaBetaBot
@@ -551,8 +555,8 @@ def train_model(hidden_layer_sizes: Tuple) -> None:
 
 
 def play_games_and_return_stats(
-    engine: GamePlayEngine, bot1: Bot, bot2: Bot, number_of_games: int
-) -> int:
+    bot1: Bot, bot2: Bot, number_of_games: int
+) -> float:
     """
     Play number_of_games games between bot1 and bot2, using the SchnapsenGamePlayEngine, and return how often bot1 won.
     Prints progress.
@@ -563,9 +567,41 @@ def play_games_and_return_stats(
         if i % 2 == 0:
             # swap bots so both start the same number of times
             lead, follower = follower, lead
-        winner, _, _ = engine.play_game(lead, follower, random.Random(i))
+        winner, _, _ = phase2_game(bot1, bot2, rand = random.Random())
         if winner == bot1:
             bot1_wins += 1
         if i % 500 == 0:
             print(f"Progress: {i}/{number_of_games}")
-    return bot1_wins
+    return bot1_wins/1000
+
+def phase2_game(bot1: Bot, bot2: Bot, rand: random.Random = random.Random()) -> None:
+    """initializes a game between two bots and returns the winner id, game points and score
+    :param bot1: the first bot
+    :param bot2: the second bot
+    :return: the winner bot (id), game points and score"""
+    
+    engine = SchnapsenGamePlayEngine()
+    deck_generator = SchnapsenDeckGenerator()
+    handgenerator = SchnapsenHandGenerator()
+
+    # randomly choose who is the leader (gets to make the first move)
+    leader, follower = rand.sample([bot1, bot2], 2)
+
+    # Setup game in phase 2
+    # generate a deck of cards, shuffle them and deal them to the players
+    cards = deck_generator.get_initial_deck()
+    shuffled = deck_generator.shuffle_deck(cards, rand)
+    hand1, hand2, talon = handgenerator.generateHands(shuffled)
+
+    leader_state = BotState(implementation=leader, hand=hand1)
+    follower_state = BotState(implementation=follower, hand=hand2)
+    game_state = GameState(
+                leader=leader_state,
+                follower=follower_state,
+                talon=Talon([], trump_suit = rand.choice([Suit.HEARTS, Suit.CLUBS, Suit.SPADES, Suit.DIAMONDS])),
+                previous=None
+            )
+    
+    winner_id, game_points, score = engine.play_game_from_state_with_new_bots(game_state=game_state, new_leader = bot1, new_follower = bot2, leader_move=None)
+    
+    return winner_id, game_points, score
