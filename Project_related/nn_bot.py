@@ -486,7 +486,7 @@ def create_replay_memory_dataset(bot1: Bot, bot2: Bot) -> None:
     replay_memory_filename: str = "rdeep_rdeep_1k_games.txt"
     replay_memory_location = pathlib.Path(replay_memory_dir) / replay_memory_filename
 
-    delete_existing_older_dataset = False
+    delete_existing_older_dataset = True
 
     # check if needed to delete any older versions of the dataset
     if delete_existing_older_dataset and replay_memory_location.exists():
@@ -532,7 +532,7 @@ def train_model(hidden_layer_sizes: Tuple) -> None:
     replay_memory_location = (
         pathlib.Path(replay_memories_directory) / replay_memory_filename
     )
-    model_name: str = "simple_model" + str(hidden_layer_sizes)
+    model_name: str = "NN_model" + "_" + "_".join([str(num) for num in hidden_layer_sizes])
     model_dir: str = "NN_models"
     model_location = pathlib.Path(model_dir) / model_name
     overwrite: bool = True
