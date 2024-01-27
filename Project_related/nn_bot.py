@@ -553,6 +553,26 @@ def train_model(hidden_layer_sizes: Tuple) -> None:
         hidden_layer_sizes = hidden_layer_sizes
     )
 
+def play_games_and_return_stats_test(
+    bot1: Bot, bot2: Bot, number_of_games: int
+) -> float:
+    """
+    Play number_of_games games between bot1 and bot2, using the SchnapsenGamePlayEngine, and return how often bot1 won.
+    Prints progress.
+    """
+    engine = SchnapsenGamePlayEngine()
+    bot1_wins: int = 0
+    lead, follower = bot1, bot2
+    for i in range(1, number_of_games + 1):
+        if i % 2 == 0:
+            # swap bots so both start the same number of times
+            lead, follower = follower, lead
+        winner, _, _ = engine.play_game(bot1, bot2, random.Random())
+        if winner == bot1:
+            bot1_wins += 1
+        if i % 500 == 0:
+            print(f"Progress: {i}/{number_of_games}")
+    return bot1_wins/number_of_games
 
 def play_games_and_return_stats(
     bot1: Bot, bot2: Bot, number_of_games: int
@@ -572,7 +592,7 @@ def play_games_and_return_stats(
             bot1_wins += 1
         if i % 500 == 0:
             print(f"Progress: {i}/{number_of_games}")
-    return bot1_wins/1000
+    return bot1_wins/number_of_games
 
 def phase2_game(bot1: Bot, bot2: Bot, rand: random.Random = random.Random()) -> None:
     """initializes a game between two bots and returns the winner id, game points and score
