@@ -1,0 +1,1 @@
+If you want to run the experiment on your own, you should open 'Experiment.ipynb' and execute all code cells in the order they are presented.
