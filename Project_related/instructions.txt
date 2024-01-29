@@ -1,1 +1,2 @@
+Not including this file, two more files must be present in the directory with the schnapsen folder: Experiment.ipynb and nn_bot.py
 If you want to run the experiment on your own, you should open 'Experiment.ipynb' and execute all code cells in the order they are presented.
